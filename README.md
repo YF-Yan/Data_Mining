@@ -1,5 +1,7 @@
 # 基于 EM（GMM）的用户行为分群与分析
 
+**版本：v1.0**
+
 ## 项目背景
 
 在电商与零售场景中，用户消费行为差异巨大：有人高频高客单，有人久未复购。若对所有用户采用同一套运营策略，成本高、效果差。**用户分群** 的目标是把行为相似的客户归为一类，再针对每类制定差异化触达（召回、升单、会员维护等）。
@@ -26,8 +28,8 @@
 │   └── rfm_test_data_100.csv      # 批量判别示例/测试
 ├── output/                        # 训练产物（app.py 依赖此目录）
 │   ├── manifest.json              # 多周期模型清单
-│   ├── 1y/、6m/、3m/、1m/         # 四个统计周期各自模型与报告数据
-│   └── （每周期目录含 gmm_model.pkl、model_meta.json、*.csv）
+│   ├── 1y/、6m/、3m/、1m/         # 四个统计周期各自模型目录
+│   └── （每周期目录含 gmm_model.pkl、model_meta.json）
 ├── core/                          # 核心后端逻辑
 │   ├── periods.py                 # 统计周期配置（近1年/半年/季度/月）
 │   ├── segments.py                # 统一群体编号 1/2/3 与名称对照
@@ -176,11 +178,11 @@ python scripts/run_train.py --data data/online_retail.csv --k 3 --seed 42
 | `output/3m/` | 近 1 季度 | 91 |
 | `output/1m/` | 近 1 个月 | 30 |
 
-每个周期独立完成：截取交易 → RFM → 标准化 → GMM → 业务标签 → PCA → 写入对应子目录，并生成 `output/manifest.json`。
+每个周期独立完成：截取交易 → RFM → 标准化 → GMM → 业务标签 → 写入 `gmm_model.pkl` 与 `model_meta.json`，并生成 `output/manifest.json`。
 
 ### 5. 训练产物
 
-每个 `output/{周期}/` 下含：`gmm_model.pkl`、`model_meta.json`、`user_segments.csv`、`cluster_summary.csv`、`pca_points.csv`。
+每个 `output/{周期}/` 下仅含：`gmm_model.pkl`（模型）、`model_meta.json`（元数据与群体画像）。根目录另有 `manifest.json`。
 
 **更新数据后**：重新执行 `python scripts/run_train.py`，客户刷新网页并选择周期即可。
 

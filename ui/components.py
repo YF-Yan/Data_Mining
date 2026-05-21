@@ -25,49 +25,12 @@ def period_options_from_manifest(manifest: Optional[dict]) -> List[Dict]:
     return [{"key": p["key"], "label": p["label"], "days": p["days"]} for p in TRAINING_PERIODS]
 
 
-def label_for_period_key(period_key: str) -> str:
-    return PERIOD_BY_KEY.get(period_key, {}).get("label", period_key)
-
-
-def render_statistics_period_notice(meta: dict) -> str:
-    """页面顶部统计周期说明。"""
-    label = get_period_label(meta)
-    return (
-        f"**当前统计周期：{label}**  \n"
-        "购买次数、消费金额为该时段内累计；最近消费天数为距分析截止日的天数。"
-        "切换周期将使用对应模型判别，请按相同窗口汇总 RFM 后填写。"
-    )
-
-
 def label_frequency(meta: dict) -> str:
     return f"购买次数（{get_period_label(meta)}内）"
 
 
 def label_monetary(meta: dict) -> str:
     return f"消费金额（{get_period_label(meta)}内，元）"
-
-
-def help_frequency(meta: dict) -> str:
-    label = get_period_label(meta)
-    return (
-        f"在 **{label}** 内，该用户的独立订单笔数（按订单号去重）。"
-        "须与当前所选统计周期口径一致。"
-    )
-
-
-def help_monetary(meta: dict) -> str:
-    label = get_period_label(meta)
-    return (
-        f"在 **{label}** 内，该用户所有订单金额合计（数量×单价）。"
-        "须与当前所选统计周期口径一致。"
-    )
-
-
-def help_recency() -> str:
-    return (
-        "距分析截止日最近一次购买的天数；越小表示越近期活跃。"
-        "与购买次数/金额的统计窗口相互独立。"
-    )
 
 
 def training_period_note(meta: dict) -> str:

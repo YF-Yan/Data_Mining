@@ -114,49 +114,12 @@ def train_single_period(
         random_state=random_state,
     )
 
-    print("[3/4] 生成业务标签与 PCA 坐标...")
+    print("[3/4] 生成业务标签...")
     segment_profiles = assign_segment_labels(rfm_df, labels, feature_cols)
     attach_canonical_to_profiles(segment_profiles)
 
-    result_df = rfm_df.copy()
-    result_df["Cluster"] = labels
-    result_df["SegmentId"] = result_df["Cluster"].map(
-        lambda c: segment_profiles[int(c)]["canonical_id"]
-    )
-    result_df["SegmentName"] = result_df["Cluster"].map(
-        lambda c: segment_profiles[int(c)]["name"]
-    )
-    result_df["SegmentDescription"] = result_df["Cluster"].map(
-        lambda c: segment_profiles[int(c)]["description"]
-    )
-
-    summary_rows = []
-    for cid, prof in segment_profiles.items():
-        summary_rows.append(
-            {
-                "Cluster": cid,
-                "SegmentId": prof["canonical_id"],
-                "SegmentName": prof["name"],
-                "UserCount": prof["size"],
-                "AvgRecency": prof["mean_recency"],
-                "AvgFrequency": prof["mean_frequency"],
-                "AvgMonetary": prof["mean_monetary"],
-                "Description": prof["description"],
-            }
-        )
-    cluster_summary = pd.DataFrame(summary_rows)
-
     pca = PCA(n_components=2, random_state=42)
-    X_pca = pca.fit_transform(X_scaled)
-    pca_df = pd.DataFrame(
-        {
-            "PC1": X_pca[:, 0],
-            "PC2": X_pca[:, 1],
-            "Cluster": labels,
-            "SegmentName": result_df["SegmentName"].values,
-            "CustomerID": result_df["CustomerID"].values,
-        }
-    )
+    pca.fit_transform(X_scaled)
 
     print(f"[4/4] 保存产物到 {output_dir} ...")
     joblib.dump(
@@ -168,12 +131,6 @@ def train_single_period(
         },
         output_dir / "gmm_model.pkl",
     )
-    result_df.to_csv(output_dir / "user_segments.csv", index=False, encoding="utf-8-sig")
-    cluster_summary.to_csv(
-        output_dir / "cluster_summary.csv", index=False, encoding="utf-8-sig"
-    )
-    pca_df.to_csv(output_dir / "pca_points.csv", index=False, encoding="utf-8-sig")
-
     meta = {
         "trained_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "data_source": data_source_name,

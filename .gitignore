@@ -7,19 +7,10 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 
-# 数据与模型（体积大，clone 后请运行 download_data.py / run_train.py）
+# 数据与训练产物（clone 后运行 download_data.py、run_train.py 生成）
 data/online_retail.csv
 data/Online Retail.xlsx
-output/**/*.pkl
-output/**/user_segments.csv
-output/**/pca_points.csv
-output/**/cluster_summary.csv
-output/model_meta.json
-output/manifest.json
-output/**/model_meta.json
-
-# 保留目录结构
-!data/.gitkeep
+output/**/*
 !output/.gitkeep
 
 # IDE / OS

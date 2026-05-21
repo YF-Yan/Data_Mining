@@ -5,9 +5,7 @@
 
 import json
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-
-import pandas as pd
+from typing import Dict, List, Optional
 
 from core.periods import DEFAULT_PERIOD_KEY, PERIOD_BY_KEY, TRAINING_PERIODS
 from core.segments import ensure_meta_segment_catalog, get_segment_catalog
@@ -17,9 +15,6 @@ MANIFEST_FILE = "manifest.json"
 REQUIRED_ARTIFACTS = [
     "model_meta.json",
     "gmm_model.pkl",
-    "user_segments.csv",
-    "cluster_summary.csv",
-    "pca_points.csv",
 ]
 
 
@@ -138,49 +133,6 @@ def load_segment_catalog(
         return manifest["segment_catalog"]
     meta = load_model_meta(output_dir=out, period_key=period_key)
     return meta.get("segment_catalog") or get_segment_catalog()
-
-
-def load_user_segments(
-    output_dir: Optional[Path] = None,
-    period_key: Optional[str] = None,
-) -> pd.DataFrame:
-    out = get_period_output_dir(resolve_period_key(period_key, output_dir), output_dir)
-    csv_path = out / "user_segments.csv"
-    _require_file(csv_path, "训练脚本会生成 user_segments.csv")
-    return pd.read_csv(csv_path)
-
-
-def load_cluster_summary(
-    output_dir: Optional[Path] = None,
-    period_key: Optional[str] = None,
-) -> pd.DataFrame:
-    out = get_period_output_dir(resolve_period_key(period_key, output_dir), output_dir)
-    csv_path = out / "cluster_summary.csv"
-    _require_file(csv_path, "训练脚本会生成 cluster_summary.csv")
-    return pd.read_csv(csv_path)
-
-
-def load_pca_points(
-    output_dir: Optional[Path] = None,
-    period_key: Optional[str] = None,
-) -> pd.DataFrame:
-    out = get_period_output_dir(resolve_period_key(period_key, output_dir), output_dir)
-    csv_path = out / "pca_points.csv"
-    _require_file(csv_path, "训练脚本会生成 pca_points.csv")
-    return pd.read_csv(csv_path)
-
-
-def load_all_artifacts(
-    output_dir: Optional[Path] = None,
-    period_key: Optional[str] = None,
-) -> Tuple[Dict, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    key = resolve_period_key(period_key, output_dir)
-    out = get_period_output_dir(key, output_dir)
-    meta = load_model_meta(out)
-    segments = load_user_segments(out)
-    summary = load_cluster_summary(out)
-    pca = load_pca_points(out)
-    return meta, segments, summary, pca
 
 
 def load_model_bundle(
