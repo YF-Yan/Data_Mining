@@ -1,0 +1,15 @@
+
+用法: run_dev.bat [选项] [-- 训练参数...]
+
+选项:
+  --skip-train      跳过训练，直接启动 Streamlit
+  --train-only      只训练，不启动应用
+  --download        训练前先下载 UCI 数据
+  --download-only   仅下载数据
+  -h, --help        显示此帮助
+
+示例:
+  run_dev.bat
+  run_dev.bat --download
+  run_dev.bat --skip-train
+  run_dev.bat -- --k 4
