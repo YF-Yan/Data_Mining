@@ -1,12 +1,7 @@
-"""
-RFM 统计周期配置（训练与前端共用）。
-
-各周期以分析截止日前推 N 天截取交易明细，再构建 RFM 并单独训练 GMM。
-"""
+"""四档统计周期配置（训练与前端共用）。"""
 
 from typing import List, Dict
 
-# key 用于 output 子目录名；days 为窗口天数（含首尾习惯按自然日近似）
 TRAINING_PERIODS: List[Dict] = [
     {"key": "1y", "label": "近 1 年", "days": 365},
     {"key": "6m", "label": "近半年", "days": 182},

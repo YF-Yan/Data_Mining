@@ -1,14 +1,10 @@
-"""
-数据预处理模块
-功能：读取 CSV、清洗交易数据、构建 RFM 特征、标准化
-"""
+"""数据预处理：读取、清洗、RFM 构建、特征工程与标准化。"""
 
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from typing import Dict, Optional, Tuple
 
-# Frequency、Monetary 做 log1p；训练集上拟合 99 分位上界用于裁剪
 LOG1P_COLS = ("Frequency", "Monetary")
 CLIP_PERCENTILE = 99.0
 
@@ -18,11 +14,7 @@ def engineer_rfm_features(
     clip_bounds: Optional[Dict[str, float]] = None,
     fit_bounds: bool = False,
 ) -> Tuple[pd.DataFrame, Dict[str, float]]:
-    """
-    RFM 特征工程：非负裁剪 → log1p → 上分位裁剪（与实验报告一致）。
-
-    clip_bounds 在训练阶段拟合，预测阶段复用，保证与 scaler 同分布。
-    """
+    """对 Frequency、Monetary 做非负裁剪、log1p 与上分位裁剪；训练时拟合 clip_bounds，预测时复用。"""
     out = rfm_df.copy()
     bounds = dict(clip_bounds or {})
 
@@ -46,36 +38,23 @@ def engineer_rfm_features(
 
 
 def load_data(file_path: str) -> pd.DataFrame:
-    """
-    读取 Online Retail CSV 数据文件。
-
-    UCI 数据集常用 latin-1 编码，列名可能含空格，此处统一去除首尾空格。
-    """
+    """读取 Online Retail CSV（latin-1，列名去首尾空格）。"""
     df = pd.read_csv(file_path, encoding="latin-1")
     df.columns = df.columns.str.strip()
     return df
 
 
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    按课程要求清洗原始交易数据：
-    1. 删除 CustomerID 为空
-    2. 删除 Quantity <= 0
-    3. 删除 UnitPrice <= 0
-    4. 删除退款订单（InvoiceNo 以 'C' 开头）
-    """
+    """清洗交易数据：删空 CustomerID、无效数量/单价、退款单（InvoiceNo 以 C 开头）。"""
     data = df.copy()
 
-    # 删除 CustomerID 为空（含 NaN 与空字符串）
     data["CustomerID"] = pd.to_numeric(data["CustomerID"], errors="coerce")
     data = data.dropna(subset=["CustomerID"])
     data["CustomerID"] = data["CustomerID"].astype(int)
 
-    # 删除无效数量与单价
     data = data[data["Quantity"] > 0]
     data = data[data["UnitPrice"] > 0]
 
-    # 删除退款/取消订单
     data["InvoiceNo"] = data["InvoiceNo"].astype(str)
     data = data[~data["InvoiceNo"].str.startswith("C")]
 
@@ -86,20 +65,12 @@ def build_rfm(
     df: pd.DataFrame,
     snapshot_date: Optional[pd.Timestamp] = None,
 ) -> pd.DataFrame:
-    """
-    按用户聚合，构建 RFM 特征：
-    - Recency：距快照日最近一次消费的天数（越小越近）
-    - Frequency：独立订单数（InvoiceNo 去重计数）
-    - Monetary：总消费金额（Quantity * UnitPrice 求和）
-
-    返回列：CustomerID, Recency, Frequency, Monetary
-    """
+    """按用户聚合 RFM，返回 CustomerID、Recency、Frequency、Monetary。"""
     data = df.copy()
     data["InvoiceDate"] = pd.to_datetime(data["InvoiceDate"])
     data["TotalPrice"] = data["Quantity"] * data["UnitPrice"]
 
     if snapshot_date is None:
-        # 以数据最大日期次日为分析基准日，避免 Recency 为 0 的边界情况
         snapshot_date = data["InvoiceDate"].max() + pd.Timedelta(days=1)
 
     rfm = (
@@ -120,12 +91,7 @@ def standardize_features(
     feature_cols: Optional[list] = None,
     clip_bounds: Optional[Dict[str, float]] = None,
 ) -> Tuple[np.ndarray, StandardScaler, list, Dict[str, float]]:
-    """
-    log1p + 百分位裁剪后，对 RFM 做 Z-score 标准化（StandardScaler）。
-
-    返回：
-        X_scaled, scaler, feature_cols, clip_bounds（供在线预测复用）
-    """
+    """特征工程后 Z-score 标准化，返回 X_scaled、scaler、feature_cols、clip_bounds。"""
     if feature_cols is None:
         feature_cols = ["Recency", "Frequency", "Monetary"]
 
@@ -147,9 +113,7 @@ def filter_by_window(
     window_days: int,
     snapshot_date: Optional[pd.Timestamp] = None,
 ) -> pd.DataFrame:
-    """
-    保留分析截止日前 window_days 天内的交易（不含截止日当天）。
-    """
+    """保留截止日前 window_days 天内的交易（不含截止日当天）。"""
     data = df.copy()
     data["InvoiceDate"] = pd.to_datetime(data["InvoiceDate"])
     if snapshot_date is None:
@@ -164,9 +128,7 @@ def preprocess_for_window(
     window_days: int,
     snapshot_date: Optional[pd.Timestamp] = None,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, np.ndarray, StandardScaler, list, Dict[str, float]]:
-    """
-    在指定统计窗口内：截取交易 -> RFM -> 特征工程 -> 标准化。
-    """
+    """在指定窗口内：截取交易 → RFM → 特征工程 → 标准化。"""
     if snapshot_date is None:
         snapshot_date = pd.to_datetime(cleaned_df["InvoiceDate"]).max() + pd.Timedelta(days=1)
 

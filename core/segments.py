@@ -1,13 +1,7 @@
-"""
-全项目统一的客户群体编号与名称。
-
-群体编号（1/2/3）与「所属群体」在全周期、全界面中固定对应；
-GMM 内部簇下标（cluster 0/1/2）因训练窗口不同可能变化，通过 canonical_id 对齐。
-"""
+"""统一群体编号与名称映射。"""
 
 from typing import Dict, List, Optional
 
-# 标准三类（K=3 时每次训练应覆盖其中三类；名称可能因窗口出现「一般发展」等等价归类）
 CANONICAL_SEGMENTS: List[Dict] = [
     {
         "id": 1,
@@ -44,7 +38,7 @@ CANONICAL_BY_ID = {s["id"]: s for s in CANONICAL_SEGMENTS}
 
 
 def get_segment_catalog() -> List[Dict]:
-    """返回可写入 manifest / model_meta 的群体手册（JSON 可序列化）。"""
+    """返回可写入 manifest / model_meta 的群体手册。"""
     return [dict(s) for s in CANONICAL_SEGMENTS]
 
 
@@ -56,7 +50,7 @@ def canonical_id_for_name(name: str, fallback_cluster: int = 0) -> int:
 
 
 def attach_canonical_to_profiles(segment_profiles: dict) -> dict:
-    """为各簇 profile 写入 canonical_id（原地修改并返回）。"""
+    """为各簇 profile 写入 canonical_id。"""
     for key, prof in segment_profiles.items():
         try:
             cluster = int(key)
@@ -69,7 +63,7 @@ def attach_canonical_to_profiles(segment_profiles: dict) -> dict:
 
 
 def ensure_meta_segment_catalog(meta: dict) -> dict:
-    """加载旧模型时补全 segment_catalog 与 canonical_id。"""
+    """补全旧模型的 segment_catalog 与 canonical_id。"""
     if "segment_catalog" not in meta:
         meta["segment_catalog"] = get_segment_catalog()
     if meta.get("segment_profiles"):
@@ -80,10 +74,7 @@ def ensure_meta_segment_catalog(meta: dict) -> dict:
 
 
 def resolve_segment_display(cluster: int, segment_profiles: dict) -> Dict:
-    """
-    由 GMM 簇编号得到统一展示字段。
-    所属群体名称以 canonical_id 对应的标准名称为准。
-    """
+    """由 GMM 簇编号得到界面展示用的群体字段。"""
     prof = segment_profiles.get(cluster) or segment_profiles.get(str(cluster), {})
     canonical_id = prof.get("canonical_id")
     if canonical_id is None:
@@ -104,7 +95,7 @@ def resolve_segment_display(cluster: int, segment_profiles: dict) -> Dict:
 
 
 def profiles_for_period_table(segment_profiles: dict) -> List[Dict]:
-    """当前周期模型下：编号—名称—簇下标—人数，供界面映射表。"""
+    """生成当前周期群体映射表行（编号、名称、簇下标、人数）。"""
     rows = []
     for key, prof in segment_profiles.items():
         try:

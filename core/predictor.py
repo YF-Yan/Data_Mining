@@ -1,6 +1,4 @@
-"""
-在线预测模块：加载已训练 GMM + Scaler，对用户输入的 RFM 进行分群判断。
-"""
+"""加载已训练模型，对 RFM 输入做单用户或批量分群预测。"""
 
 from pathlib import Path
 from typing import Dict, List, Union
@@ -20,9 +18,7 @@ def build_personalized_insight(
     cluster: int,
     rfm_bounds: dict = None,
 ) -> str:
-    """
-    根据用户输入的 RFM 生成通俗解读，避免仅用群体平均标签造成误解。
-    """
+    """根据用户 RFM 与所属簇生成个性化解读文本。"""
     bounds = rfm_bounds or {}
     r_med = bounds.get("recency", {}).get("median", 50)
     f_med = bounds.get("frequency", {}).get("median", 2)
@@ -82,7 +78,7 @@ ADVICE_MAP = {
 
 
 def _profile_lookup(segment_profiles: dict, cluster_id: int) -> dict:
-    """JSON 中键可能为字符串，统一按簇编号读取。"""
+    """按簇编号读取 profile（兼容 JSON 字符串键）。"""
     return segment_profiles.get(cluster_id) or segment_profiles.get(str(cluster_id), {})
 
 
@@ -92,7 +88,7 @@ def _prepare_features_for_model(
     scaler,
     clip_bounds: dict = None,
 ) -> np.ndarray:
-    """与训练一致：log1p/裁剪（若有）→ StandardScaler。"""
+    """与训练一致的特征变换后送入 scaler。"""
     if clip_bounds:
         engineered, _ = engineer_rfm_features(
             rfm_df, clip_bounds=clip_bounds, fit_bounds=False
@@ -103,7 +99,7 @@ def _prepare_features_for_model(
 
 
 def load_model_bundle(output_dir: Path) -> dict:
-    """加载 gmm_model.pkl（含 gmm、scaler、feature_cols）。"""
+    """加载 gmm_model.pkl。"""
     path = output_dir / "gmm_model.pkl"
     if not path.exists():
         raise FileNotFoundError(
@@ -123,11 +119,7 @@ def predict_rfm(
     rfm_bounds: dict = None,
     clip_bounds: dict = None,
 ) -> Dict:
-    """
-    对单个用户的 RFM 输入进行分群判断。
-
-    返回字段：cluster, segment_name, description, advice, probabilities, confidence
-    """
+    """对单个用户 RFM 做分群预测。"""
     if recency < 0 or frequency < 0 or monetary < 0:
         raise ValueError("RFM 数值不能为负数。")
 
@@ -170,9 +162,7 @@ def predict_batch(
     id_col: str = None,
     clip_bounds: dict = None,
 ) -> pd.DataFrame:
-    """
-    批量预测。df 需包含 Recency, Frequency, Monetary 列（大小写不敏感）。
-    """
+    """批量预测，df 需含 Recency、Frequency、Monetary 列。"""
     col_map = {c.lower(): c for c in df.columns}
     required = ["recency", "frequency", "monetary"]
     for r in required:
