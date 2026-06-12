@@ -51,6 +51,7 @@
 ├── app.py                         # 【客户】Streamlit 主界面（判别 / 批量 / 报告）
 ├── pages/
 │   └── 1_使用手册.py              # 使用手册独立页面
+├── 实验报告.md                    # 课程报告
 ├── requirements.txt
 └── README.md
 ```

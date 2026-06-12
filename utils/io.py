@@ -30,8 +30,13 @@ def _require_file(path: Path, hint: str) -> None:
         )
 
 
-def _period_dir_complete(path: Path) -> bool:
+def period_dir_complete(path: Path) -> bool:
+    """某周期目录下 gmm_model.pkl 与 model_meta.json 是否齐全。"""
     return all((path / name).exists() for name in REQUIRED_ARTIFACTS)
+
+
+def _period_dir_complete(path: Path) -> bool:
+    return period_dir_complete(path)
 
 
 def load_manifest(output_dir: Optional[Path] = None) -> Optional[Dict]:
@@ -99,7 +104,7 @@ def resolve_period_key(period_key: Optional[str], output_dir: Optional[Path] = N
 
 
 def artifacts_ready(output_dir: Optional[Path] = None) -> bool:
-    """检查训练产物是否齐全。"""
+    """检查训练产物是否齐全（manifest 所列周期或旧版单目录）。"""
     out = Path(output_dir) if output_dir else get_output_dir()
     manifest = load_manifest(out)
     if manifest:
@@ -108,6 +113,19 @@ def artifacts_ready(output_dir: Optional[Path] = None) -> bool:
             _period_dir_complete(out / p["key"]) for p in periods
         )
     return _period_dir_complete(out)
+
+
+def all_periods_trained(output_dir: Optional[Path] = None) -> bool:
+    """四统计周期训练产物是否齐全（manifest + 各周期模型文件）。"""
+    out = Path(output_dir) if output_dir else get_output_dir()
+    manifest = load_manifest(out)
+    if not manifest or not manifest.get("periods"):
+        return False
+    keys = {p["key"] for p in manifest["periods"]}
+    expected = {p["key"] for p in TRAINING_PERIODS}
+    if keys != expected:
+        return False
+    return all(_period_dir_complete(out / k) for k in expected)
 
 
 def load_model_meta(

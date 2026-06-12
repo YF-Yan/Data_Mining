@@ -7,6 +7,7 @@
 用法：
     python scripts/run_train.py
     python scripts/run_train.py --data data/online_retail.csv --k 3
+    python scripts/run_train.py --force   # 忽略已有产物，强制重训
 """
 
 import argparse
@@ -28,6 +29,7 @@ from core.dataset import clean_data, load_data, preprocess_for_window
 from core.model import run_clustering
 from core.periods import DEFAULT_PERIOD_KEY, TRAINING_PERIODS
 from core.segments import attach_canonical_to_profiles, get_segment_catalog
+from utils.io import all_periods_trained, period_dir_complete
 
 OUTPUT_DIR = PROJECT_ROOT / "output"
 
@@ -81,6 +83,7 @@ def train_single_period(
     random_state: int,
     output_dir: Path,
     data_source_name: str,
+    force: bool = False,
 ) -> dict:
     """训练单个统计周期并写入 output_dir。"""
     period_key = period_cfg["key"]
@@ -92,6 +95,11 @@ def train_single_period(
     print(f"\n{'=' * 50}")
     print(f"统计周期：{period_label}（窗口 {window_days} 天）")
     print(f"{'=' * 50}")
+
+    if not force and period_dir_complete(output_dir):
+        print(f"  跳过训练：产物已存在 → {output_dir}")
+        with open(output_dir / "model_meta.json", "r", encoding="utf-8") as f:
+            return json.load(f)
 
     print("[1/4] 截取窗口并构建 RFM ...")
     windowed_df, rfm_df, X_scaled, scaler, feature_cols, clip_bounds = preprocess_for_window(
@@ -182,9 +190,18 @@ def train_all_periods(
     n_components: int = 3,
     random_state: int = 42,
     output_dir: Path = OUTPUT_DIR,
+    force: bool = False,
 ) -> None:
     """为全部统计周期训练并写入 manifest。"""
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    if not force and all_periods_trained(output_dir):
+        print("全部周期训练产物已存在，跳过训练。")
+        manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
+        for p in manifest.get("periods", []):
+            print(f"  · {p['label']}：{p['n_users']:,} 用户 → output/{p['key']}/")
+        print("\n请运行客户界面：streamlit run app.py")
+        return
 
     print(f"加载数据：{data_path}")
     raw = load_data(data_path)
@@ -204,6 +221,7 @@ def train_all_periods(
             random_state=random_state,
             output_dir=period_dir,
             data_source_name=data_source_name,
+            force=force,
         )
         trained_periods.append(
             {
@@ -245,6 +263,11 @@ def parse_args():
         default=str(OUTPUT_DIR),
         help="产物根目录",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="忽略已有产物，强制重新训练",
+    )
     return parser.parse_args()
 
 
@@ -261,4 +284,5 @@ if __name__ == "__main__":
         n_components=args.k,
         random_state=args.seed,
         output_dir=Path(args.output),
+        force=args.force,
     )

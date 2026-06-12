@@ -9,6 +9,7 @@ REM   run_dev.bat --train-only
 REM   run_dev.bat --download
 REM   run_dev.bat --download-only
 REM   run_dev.bat -- --k 4 --seed 42
+REM   run_dev.bat -- --force          强制重训（忽略已有 output）
 
 set "ROOT=%~dp0"
 cd /d "%ROOT%"
@@ -65,6 +66,17 @@ if "%DO_DOWNLOAD%"=="1" (
         echo.
         echo 数据已就绪。
         exit /b 0
+    )
+)
+
+if "%SKIP_TRAIN%"=="0" (
+    echo !TRAIN_ARGS! | findstr /i /c:"--force" >nul
+    if errorlevel 1 (
+        "%PY%" -c "from utils.io import all_periods_trained; import sys; sys.exit(0 if all_periods_trained() else 1)"
+        if not errorlevel 1 (
+            echo [提示] 已检测到完整训练产物，跳过训练。
+            set "SKIP_TRAIN=1"
+        )
     )
 )
 

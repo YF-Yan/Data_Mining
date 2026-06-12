@@ -176,26 +176,29 @@ def preprocess_for_window(
     return windowed, rfm, X_scaled, scaler, feature_cols, clip_bounds
 
 
-def preprocess_pipeline(
-    file_path: str,
-) -> Tuple[pd.DataFrame, pd.DataFrame, np.ndarray, StandardScaler, list, Dict[str, float]]:
-    """
-    完整预处理流水线：加载 -> 清洗 -> RFM -> 特征工程 -> 标准化。
-    """
-    raw = load_data(file_path)
-    cleaned = clean_data(raw)
-    rfm = build_rfm(cleaned)
-    X_scaled, scaler, feature_cols, clip_bounds = standardize_features(rfm)
-
-    return cleaned, rfm, X_scaled, scaler, feature_cols, clip_bounds
-
-
-def preprocess_from_dataframe(
-    df: pd.DataFrame,
-) -> Tuple[pd.DataFrame, pd.DataFrame, np.ndarray, StandardScaler, list, Dict[str, float]]:
-    """从已加载的 DataFrame 执行预处理。"""
-    cleaned = clean_data(df)
-    rfm = build_rfm(cleaned)
-    X_scaled, scaler, feature_cols, clip_bounds = standardize_features(rfm)
-
-    return cleaned, rfm, X_scaled, scaler, feature_cols, clip_bounds
+'''
+测试使用
+'''
+# def preprocess_pipeline(
+#     file_path: str,
+# ) -> Tuple[pd.DataFrame, pd.DataFrame, np.ndarray, StandardScaler, list, Dict[str, float]]:
+#     """
+#     完整预处理流水线：加载 -> 清洗 -> RFM -> 特征工程 -> 标准化。
+#     """
+#     raw = load_data(file_path)
+#     cleaned = clean_data(raw)
+#     rfm = build_rfm(cleaned)
+#     X_scaled, scaler, feature_cols, clip_bounds = standardize_features(rfm)
+#
+#     return cleaned, rfm, X_scaled, scaler, feature_cols, clip_bounds
+#
+#
+# def preprocess_from_dataframe(
+#     df: pd.DataFrame,
+# ) -> Tuple[pd.DataFrame, pd.DataFrame, np.ndarray, StandardScaler, list, Dict[str, float]]:
+#     """从已加载的 DataFrame 执行预处理。"""
+#     cleaned = clean_data(df)
+#     rfm = build_rfm(cleaned)
+#     X_scaled, scaler, feature_cols, clip_bounds = standardize_features(rfm)
+#
+#     return cleaned, rfm, X_scaled, scaler, feature_cols, clip_bounds

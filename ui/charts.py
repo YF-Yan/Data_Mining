@@ -8,6 +8,15 @@ import pandas as pd
 
 plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
+plt.rcParams.update(
+    {
+        "font.size": 15,
+        "axes.titlesize": 17,
+        "axes.labelsize": 15,
+        "xtick.labelsize": 13,
+        "ytick.labelsize": 13,
+    }
+)
 
 
 def plot_segment_counts(summary_df: pd.DataFrame, title: str = "各客户群体人数"):

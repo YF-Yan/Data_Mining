@@ -5,6 +5,7 @@
     python scripts/download_data.py
 """
 
+import sys
 import urllib.request
 from pathlib import Path
 
@@ -14,7 +15,12 @@ DATA_URL = (
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR = PROJECT_ROOT / "data"
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from utils.paths import get_project_root
+
+DATA_DIR = get_project_root() / "data"
 OUTPUT_CSV = DATA_DIR / "online_retail.csv"
 
 

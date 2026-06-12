@@ -13,9 +13,11 @@ if str(ROOT) not in sys.path:
 
 from ui.layout import init_app_context
 from ui.manual_page import render_manual_page
+from ui.theme import apply_flat_theme
 from utils.io import artifacts_ready
 
 st.set_page_config(page_title="使用手册", page_icon="📖", layout="wide")
+apply_flat_theme()
 
 st.title("使用手册")
 

@@ -21,6 +21,7 @@ from core.segments import resolve_segment_display
 from ui.batch_report import render_batch_report_tab, save_batch_report
 from ui.components import get_period_label, label_frequency, label_monetary
 from ui.layout import init_app_context
+from ui.theme import apply_flat_theme
 from utils.io import artifacts_ready
 
 
@@ -106,7 +107,7 @@ def render_predict_tab(bundle: dict, meta: dict):
         disp = resolve_segment_display(int(cid), profiles)
         prob_rows.append({"群体": disp["segment_name"], "概率": prob})
     prob_df = pd.DataFrame(prob_rows)
-    st.bar_chart(prob_df.set_index("群体")["概率"], height=220)
+    st.bar_chart(prob_df.set_index("群体")["概率"], height=320)
 
 
 def render_batch_tab(bundle: dict, meta: dict, period_key: str):
@@ -158,6 +159,7 @@ def render_batch_tab(bundle: dict, meta: dict, period_key: str):
 
 def main():
     st.set_page_config(page_title="用户分群判别", page_icon="🎯", layout="wide")
+    apply_flat_theme()
     st.title("用户分群判别")
 
     if not artifacts_ready():

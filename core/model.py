@@ -37,6 +37,9 @@ def fit_gmm(
         reg_covar=1e-6,  # 协方差对角正则，防止奇异矩阵
     )
     gmm.fit(X_scaled)
+    '''
+    进行EM算法，得到每个样本的簇标签.
+    '''
     labels = gmm.predict(X_scaled)
 
     return gmm, labels
